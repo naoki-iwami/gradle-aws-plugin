@@ -5,14 +5,20 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import jp.classmethod.aws.gradle.s3.CreateBucketTask;
 import jp.classmethod.aws.gradle.s3.DeleteBucketTask;
 import jp.classmethod.aws.gradle.s3.SyncTask;
+import jp.classmethod.aws.gradle.s3.DownloadTask;
 
 buildscript {
 	repositories {
 		mavenCentral()
-		maven { url "https://plugins.gradle.org/m2/" }
+		    maven { url "http://repo.spring.io/snapshot" }
+    maven { url "http://repo.spring.io/milestone" }
+    maven { url "http://repo1.maven.org/maven2/" }
+    maven { url "https://plugins.gradle.org/m2/" }
+    maven { url 'https://artifactory.demoreach.org/artifactory/libs-release/' }
+		maven { url "https://artifactory.demoreach.org/artifactory/gradle-plugins-local/" }
 	}
 	dependencies {
-		classpath "jp.classmethod.aws:gradle-aws-plugin:0.+"
+		classpath "jp.classmethod.aws:gradle-aws-plugin:0.31-SNAPSHOT"
 	}
 }
 
@@ -23,19 +29,19 @@ aws {
 }
 
 task createBucket(type: CreateBucketTask) {
-	bucketName "gradle-aws-plugin-sample"
+	bucketName "gradle-aws-plugin-sample-iwami"
 	ifNotExists true
 }
 
 task deleteBucket(type: DeleteBucketTask) {
-	bucketName "gradle-aws-plugin-sample"
+	bucketName "gradle-aws-plugin-sample-iwami"
 	ifExists true
 	deleteObjects true
 }
 
 task syncContents(type: SyncTask, dependsOn: createBucket) {
 	source file("contents") // must be directory
-	bucketName "gradle-aws-plugin-sample"
+	bucketName "gradle-aws-plugin-sample-iwami"
 	prefix "02-s3-sync-contents/"
 	
 	// to set all file's metadata "no-cache, no-store"
@@ -44,4 +50,10 @@ task syncContents(type: SyncTask, dependsOn: createBucket) {
 		m.setCacheControl("no-cache, no-store")
 		return m
 	}
+}
+
+task downloadContents(type: DownloadTask, dependsOn: createBucket) {
+	bucketName "gradle-aws-plugin-sample-iwami"
+	prefix "02-s3-sync-contents/"
+	dest file("build/reports") // must be directory
 }
