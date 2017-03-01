@@ -15,16 +15,12 @@
  */
 package jp.classmethod.aws.gradle.s3;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import lombok.Getter;
 import lombok.Setter;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.GradleException;
@@ -32,10 +28,12 @@ import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.TaskAction;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by iwami on 2016/08/12.
@@ -71,9 +69,7 @@ public class DownloadTask extends ConventionTask {
 			throw new GradleException("bucketName is not specified");
 		if (dest == null)
 			throw new GradleException("dest is not specified");
-		if (dest.isDirectory() == false)
-			throw new GradleException("dest must be directory");
-		
+
 		prefix = prefix.startsWith("/") ? prefix.substring(1) : prefix;
 		
 		AmazonS3PluginExtension ext = getProject().getExtensions().getByType(AmazonS3PluginExtension.class);
@@ -94,7 +90,8 @@ public class DownloadTask extends ConventionTask {
 		List<S3ObjectSummary> summaries = listing.getObjectSummaries();
 		for (int i = 0; i < summaries.size(); i++) {
 			S3ObjectSummary summary = summaries.get(i);
-			es.execute(new InnerDownloadThread(s3, bucketName, prefix, dest, getLogger()));
+			File destFile = new File(dest, summary.getKey().substring(prefix.length()));
+			es.execute(new InnerDownloadThread(s3, bucketName, summary.getKey(), destFile, getLogger()));
 		}
 		
 		es.shutdown();

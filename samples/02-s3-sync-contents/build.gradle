@@ -5,14 +5,20 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import jp.classmethod.aws.gradle.s3.CreateBucketTask;
 import jp.classmethod.aws.gradle.s3.DeleteBucketTask;
 import jp.classmethod.aws.gradle.s3.SyncTask;
+import jp.classmethod.aws.gradle.s3.DownloadTask;
 
 buildscript {
 	repositories {
 		mavenCentral()
 		maven { url "https://plugins.gradle.org/m2/" }
+    maven { url "https://artifactory.demoreach.org/artifactory/gradle-plugins-local/" }
 	}
 	dependencies {
-		classpath "jp.classmethod.aws:gradle-aws-plugin:0.+"
+		classpath "jp.classmethod.aws:gradle-aws-plugin:0.31-SNAPSHOT"
+		classpath "com.amazonaws:aws-java-sdk-s3:1.10.69"
+	classpath "com.google.guava:guava:18.0"
+	classpath "jp.xet.spar-wings:spar-wings-awscli-config:0.16"
+
 	}
 }
 
@@ -23,19 +29,19 @@ aws {
 }
 
 task createBucket(type: CreateBucketTask) {
-	bucketName "gradle-aws-plugin-sample"
+	bucketName "gradle-aws-plugin-sample-iwami"
 	ifNotExists true
 }
 
 task deleteBucket(type: DeleteBucketTask) {
-	bucketName "gradle-aws-plugin-sample"
+	bucketName "gradle-aws-plugin-sample-iwami"
 	ifExists true
 	deleteObjects true
 }
 
 task syncContents(type: SyncTask, dependsOn: createBucket) {
 	source file("contents") // must be directory
-	bucketName "gradle-aws-plugin-sample"
+	bucketName "gradle-aws-plugin-sample-iwami"
 	prefix "02-s3-sync-contents/"
 	
 	// to set all file's metadata "no-cache, no-store"
@@ -45,3 +51,13 @@ task syncContents(type: SyncTask, dependsOn: createBucket) {
 		return m
 	}
 }
+
+
+task downloadContents(type: DownloadTask, dependsOn: createBucket) {
+  // /dev-zero-developer/gradle-reports/zero-common/20160810/feature/ZERO-789-change-CTA/tests/capture/jp/bizreach/zero/common/scenario/candidate/CandidateApplyScenarioSpec
+
+	bucketName "dev-zero-developer"
+	prefix "gradle-reports/zero-common/20160810/feature/ZERO-789-change-CTA/tests/capture/"
+	dest file("a") // must be directory
+}
+
